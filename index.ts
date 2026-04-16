@@ -136,6 +136,10 @@ const SYM = {
 	submit: "✓",
 };
 
+function shortenLabel(label: string, maxWidth: number): string {
+	return truncateToWidth(label, Math.max(1, maxWidth));
+}
+
 // ─── Extension ───────────────────────────────────────────────────────────────
 
 export default function askUserQuestion(pi: ExtensionAPI) {
@@ -549,7 +553,8 @@ Use this tool when you need user input to proceed — for clarifying requirement
 						for (let i = 0; i < questions.length; i++) {
 							const isActive = i === currentTab;
 							const answered = isAnswered(questions[i]);
-							const lbl = questions[i].label;
+							const rawLabel = questions[i].label;
+							const lbl = isActive ? rawLabel : shortenLabel(rawLabel, 10);
 							const icon = answered ? theme.fg("success", SYM.check) : theme.fg("dim", SYM.dot);
 							const text = ` ${icon} ${lbl} `;
 							tabs.push(
@@ -559,7 +564,8 @@ Use this tool when you need user input to proceed — for clarifying requirement
 						// Submit tab
 						const isSubmitTab = currentTab === questions.length;
 						const canSubmit = allRequired();
-						const submitText = ` ${SYM.submit} Submit `;
+						const submitLabel = isSubmitTab ? "Submit" : shortenLabel("Submit", 10);
+						const submitText = ` ${SYM.submit} ${submitLabel} `;
 						tabs.push(
 							isSubmitTab
 								? theme.bg("selectedBg", theme.fg("text", submitText))
