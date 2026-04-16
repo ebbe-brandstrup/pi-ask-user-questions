@@ -19,7 +19,7 @@
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { Editor, type EditorTheme, Key, matchesKey, Text, truncateToWidth, wrapTextWithAnsi } from "@mariozechner/pi-tui";
+import { Editor, type EditorTheme, Key, matchesKey, Text, truncateToWidth, visibleWidth, wrapTextWithAnsi } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
 import { StringEnum } from "@mariozechner/pi-ai";
 
@@ -549,12 +549,36 @@ Use this tool when you need user input to proceed — for clarifying requirement
 
 					// Tab bar (multi-question)
 					if (isMulti) {
+						const totalTabCount = questions.length + 1;
+						const inactiveTabCount = totalTabCount - 1;
+						const separatorWidth = totalTabCount - 1;
+						const outerPaddingWidth = 1;
+						const tabChromeWidth = 4; // " icon label " minus label width
+						const minInactiveLabelWidth = 2;
+						const activeRawLabel = currentTab === questions.length ? "Submit" : questions[currentTab]?.label ?? "";
+						const reservedForInactive =
+							inactiveTabCount * (tabChromeWidth + minInactiveLabelWidth) + separatorWidth + outerPaddingWidth;
+						const activeLabelMaxWidth = Math.max(4, maxW - reservedForInactive - tabChromeWidth);
+						const activeLabel = shortenLabel(activeRawLabel, activeLabelMaxWidth);
+						const remainingInactiveLabelSpace = Math.max(
+							0,
+							maxW -
+								outerPaddingWidth -
+								separatorWidth -
+								(tabChromeWidth + visibleWidth(activeLabel)) -
+								inactiveTabCount * tabChromeWidth,
+						);
+						const inactiveLabelMaxWidth =
+							inactiveTabCount > 0
+								? Math.max(minInactiveLabelWidth, Math.floor(remainingInactiveLabelSpace / inactiveTabCount))
+								: activeLabelMaxWidth;
+
 						const tabs: string[] = [];
 						for (let i = 0; i < questions.length; i++) {
 							const isActive = i === currentTab;
 							const answered = isAnswered(questions[i]);
 							const rawLabel = questions[i].label;
-							const lbl = isActive ? rawLabel : shortenLabel(rawLabel, 10);
+							const lbl = isActive ? activeLabel : shortenLabel(rawLabel, inactiveLabelMaxWidth);
 							const icon = answered ? theme.fg("success", SYM.check) : theme.fg("dim", SYM.dot);
 							const text = ` ${icon} ${lbl} `;
 							tabs.push(
@@ -564,7 +588,7 @@ Use this tool when you need user input to proceed — for clarifying requirement
 						// Submit tab
 						const isSubmitTab = currentTab === questions.length;
 						const canSubmit = allRequired();
-						const submitLabel = isSubmitTab ? "Submit" : shortenLabel("Submit", 10);
+						const submitLabel = isSubmitTab ? activeLabel : shortenLabel("Submit", inactiveLabelMaxWidth);
 						const submitText = ` ${SYM.submit} ${submitLabel} `;
 						tabs.push(
 							isSubmitTab
