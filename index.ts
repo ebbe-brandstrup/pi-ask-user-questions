@@ -19,7 +19,7 @@
  */
 
 import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-import { Editor, type EditorTheme, Key, matchesKey, Text, truncateToWidth, visibleWidth } from "@mariozechner/pi-tui";
+import { Editor, type EditorTheme, Key, matchesKey, Text, truncateToWidth, wrapTextWithAnsi } from "@mariozechner/pi-tui";
 import { Type } from "@sinclair/typebox";
 import { StringEnum } from "@mariozechner/pi-ai";
 
@@ -523,18 +523,23 @@ Use this tool when you need user input to proceed — for clarifying requirement
 					if (cachedLines) return cachedLines;
 
 					const lines: string[] = [];
-					const maxW = Math.min(width, 120);
+					const maxW = width;
 					const add = (s: string) => lines.push(truncateToWidth(s, maxW));
+					const addWrapped = (s: string, wrapWidth = maxW, prefix = "") => {
+						for (const line of wrapTextWithAnsi(s, Math.max(1, wrapWidth))) {
+							add(`${prefix}${line}`);
+						}
+					};
 					const hr = () => add(theme.fg("accent", "─".repeat(maxW)));
 
 					hr();
 
 					// Title & description
 					if (params.title) {
-						add(` ${theme.fg("accent", theme.bold(params.title))}`);
+						addWrapped(` ${theme.fg("accent", theme.bold(params.title))}`);
 					}
 					if (params.description) {
-						add(` ${theme.fg("muted", params.description)}`);
+						addWrapped(` ${theme.fg("muted", params.description)}`, maxW - 1, " ");
 					}
 					if (params.title || params.description) lines.push("");
 
@@ -577,7 +582,7 @@ Use this tool when you need user input to proceed — for clarifying requirement
 								const a = radioAnswers.get(question.id);
 								if (a) {
 									const prefix = a.wasCustom ? theme.fg("dim", "(wrote) ") : "";
-									add(` ${label} ${prefix}${a.label}`);
+									addWrapped(` ${label} ${prefix}${a.label}`, maxW - 1, " ");
 								} else {
 									add(` ${label} ${theme.fg("warning", "(unanswered)")}`);
 								}
@@ -587,14 +592,14 @@ Use this tool when you need user input to proceed — for clarifying requirement
 								const all = [...set];
 								if (custom) all.push(`${theme.fg("dim", "(wrote)")} ${custom}`);
 								if (all.length) {
-									add(` ${label} ${all.join(", ")}`);
+									addWrapped(` ${label} ${all.join(", ")}`, maxW - 1, " ");
 								} else {
 									add(` ${label} ${theme.fg("warning", "(unanswered)")}`);
 								}
 							} else {
 								const t = textAnswers.get(question.id)?.trim();
 								if (t) {
-									add(` ${label} ${truncateToWidth(t, maxW - visibleWidth(question.label) - 5)}`);
+									addWrapped(` ${label} ${t}`, maxW - 1, " ");
 								} else {
 									add(` ${label} ${theme.fg("warning", "(unanswered)")}`);
 								}
@@ -633,7 +638,7 @@ Use this tool when you need user input to proceed — for clarifying requirement
 								? theme.fg("dim", "[multi-select]")
 								: theme.fg("dim", "[text]");
 
-					add(` ${theme.fg("text", theme.bold(q.prompt))} ${typeTag}`);
+					addWrapped(` ${theme.fg("text", theme.bold(q.prompt))} ${typeTag}`, maxW - 1, " ");
 					if (q.required) {
 						add(` ${theme.fg("warning", "*required")}`);
 					}
@@ -649,9 +654,9 @@ Use this tool when you need user input to proceed — for clarifying requirement
 							const bullet = isSelected ? theme.fg("accent", SYM.radioOn) : theme.fg("dim", SYM.radioOff);
 							const pointer = isCursor ? theme.fg("accent", SYM.pointer) : " ";
 							const color = isCursor ? "accent" : isSelected ? "text" : "muted";
-							add(` ${pointer} ${bullet} ${theme.fg(color, opt.label)}`);
+							addWrapped(` ${pointer} ${bullet} ${theme.fg(color, opt.label)}`, maxW - 1, " ");
 							if (opt.description) {
-								add(`      ${theme.fg("dim", opt.description)}`);
+								addWrapped(theme.fg("dim", opt.description), maxW - 6, "      ");
 							}
 						}
 						if (q.allowOther) {
@@ -660,7 +665,7 @@ Use this tool when you need user input to proceed — for clarifying requirement
 							const bullet = isSelected ? theme.fg("accent", SYM.radioOn) : theme.fg("dim", SYM.radioOff);
 							const pointer = isCursor ? theme.fg("accent", SYM.pointer) : " ";
 							const label = isSelected ? `Other: ${selected.label}` : "Other...";
-							add(` ${pointer} ${bullet} ${theme.fg(isCursor ? "accent" : "muted", label)}`);
+							addWrapped(` ${pointer} ${bullet} ${theme.fg(isCursor ? "accent" : "muted", label)}`, maxW - 1, " ");
 
 							if (otherMode) {
 								lines.push("");
@@ -682,9 +687,9 @@ Use this tool when you need user input to proceed — for clarifying requirement
 							const box = isChecked ? theme.fg("accent", SYM.checkOn) : theme.fg("dim", SYM.checkOff);
 							const pointer = isCursor ? theme.fg("accent", SYM.pointer) : " ";
 							const color = isCursor ? "accent" : isChecked ? "text" : "muted";
-							add(` ${pointer} ${box} ${theme.fg(color, opt.label)}`);
+							addWrapped(` ${pointer} ${box} ${theme.fg(color, opt.label)}`, maxW - 1, " ");
 							if (opt.description) {
-								add(`      ${theme.fg("dim", opt.description)}`);
+								addWrapped(theme.fg("dim", opt.description), maxW - 6, "      ");
 							}
 						}
 						if (q.allowOther) {
@@ -693,7 +698,7 @@ Use this tool when you need user input to proceed — for clarifying requirement
 							const box = custom ? theme.fg("accent", SYM.checkOn) : theme.fg("dim", SYM.checkOff);
 							const pointer = isCursor ? theme.fg("accent", SYM.pointer) : " ";
 							const label = custom ? `Other: ${custom}` : "Other...";
-							add(` ${pointer} ${box} ${theme.fg(isCursor ? "accent" : "muted", label)}`);
+							addWrapped(` ${pointer} ${box} ${theme.fg(isCursor ? "accent" : "muted", label)}`, maxW - 1, " ");
 
 							if (otherMode) {
 								lines.push("");
@@ -708,7 +713,7 @@ Use this tool when you need user input to proceed — for clarifying requirement
 					// ── Text input ───────────────────────────────────────
 					if (q.type === "text") {
 						if (q.placeholder && !editor.getText()) {
-							add(` ${theme.fg("dim", q.placeholder)}`);
+							addWrapped(` ${theme.fg("dim", q.placeholder)}`, maxW - 1, " ");
 						}
 						for (const line of editor.render(maxW - 4)) {
 							add(`  ${line}`);
