@@ -1,0 +1,28 @@
+{
+  "name": "pi-ask-user-questions",
+  "version": "1.6.0",
+  "description": "Pi extension for asking users structured interactive questions",
+  "keywords": [
+    "pi-package",
+    "pi-extension"
+  ],
+  "peerDependencies": {
+    "@mariozechner/pi-ai": "*",
+    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-tui": "*",
+    "@sinclair/typebox": "*"
+  },
+  "pi": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ebbe-brandstrup/pi-ask-user-questions.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ebbe-brandstrup/pi-ask-user-questions/issues"
+  },
+  "homepage": "https://github.com/ebbe-brandstrup/pi-ask-user-questions#readme"
+}
