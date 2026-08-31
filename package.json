@@ -1,6 +1,6 @@
 {
   "name": "pi-ask-user-questions",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Pi extension for asking users structured interactive questions",
   "keywords": [
     "pi-package",

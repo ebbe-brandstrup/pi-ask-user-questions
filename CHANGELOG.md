@@ -1,5 +1,17 @@
 # pi-mono-ask-user-question
 
+## 1.7.0
+
+### ask-user-question — rendering and robustness fixes
+
+- **Fixed rapid screen flicker while a question was displayed.** The form rendered its full height unconditionally; when it (plus pi's animated working spinner and footer) exceeded the terminal height, the spinner's changing line landed above the TUI's viewport top, forcing a full-screen clear + repaint on every spinner tick (~80 ms). The form is now height-capped with a scroll window that follows the cursor, and the scroll state is exposed via `↑`/`↓` hints in the footer.
+- **Rendered in the document flow below the transcript** (pi's editor-replacement custom-UI mode), so the most recent messages remain visible directly above the form. The height clamp is what prevents the flicker; overlay mode was evaluated and rejected because it composites over the frame and hides the newest transcript lines behind the form.
+- **Ctrl+C no longer swallowed.** pi delivers Ctrl+C to the focused `ui.custom` component; it is now handled as cancel on a double-press (within 1 s) so a reflex press doesn't discard partial answers.
+- **Emits `herdr:blocked`** (`{ active: true, label }` while waiting, `{ active: false }` after) so integrations such as herdr can show the agent as blocked/waiting-for-user instead of working.
+- **RPC guard:** `ctx.ui.custom` resolving `undefined` (headless hosts) now returns a clean error result instead of crashing on a missing `result.cancelled`.
+- **Stale cache after resize:** the render cache is keyed on width and terminal rows, so a resize re-renders instead of repainting stale-width lines.
+- On the Submit tab, `↑`/`↓` now scroll the review list when it exceeds the available height.
+
 ## 1.6.0
 
 ### Minor Changes

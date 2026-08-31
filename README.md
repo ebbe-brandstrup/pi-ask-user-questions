@@ -212,6 +212,11 @@ A full multi-line editor. Shift+Enter for newlines, Enter to submit.
 | Key               | Action                                |
 | ----------------- | ------------------------------------- |
 | `Esc`             | Cancel (in "Other" mode: go back)     |
+| `Ctrl+C` ×2       | Cancel (press twice within 1s)        |
+
+When a question has more options than fit the terminal, the list scrolls
+around the cursor and the footer shows how many rows are hidden above/below.
+On the Submit tab, `↑`/`↓` scroll the review list.
 
 ## Output Format
 
